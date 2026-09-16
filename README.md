@@ -21,14 +21,68 @@ não é preciso recarregar nada).
 
 ```
 AutoShorts4You/
-  manifest.json   MV3, permissões mínimas
-  content.js      toda a lógica (IIFE, sem globais)
-  popup.html      popup com o botão liga/desliga
-  popup.css       tema claro/escuro via prefers-color-scheme
-  popup.js        lê e grava o estado em chrome.storage.local
-  icons/          16, 48 e 128 px
+  manifest.json          MV3, permissões mínimas
+  content.js             toda a lógica (IIFE, sem globais)
+  popup.html             popup com o botão liga/desliga
+  popup.css              tema claro/escuro via prefers-color-scheme
+  popup.js               lê e grava o estado em chrome.storage.local
+  icons/                 16, 48 e 128 px
+  tools/check.mjs        gate estático de segurança e qualidade
+  tools/test.mjs         testes de comportamento do content.js
+  .github/workflows/     pipeline de CI (sem deploy)
+  package.json           só atalhos de script; zero dependências
   README.md
 ```
+
+`tools/`, `.github/` e `package.json` ficam dentro da pasta que o Opera carrega,
+mas o navegador simplesmente ignora arquivos não citados no `manifest.json` —
+nada disso vai para a extensão em execução.
+
+## Testes
+
+Precisa apenas do Node 18+. Não há `npm install`: o projeto não tem dependências.
+
+```powershell
+node tools/check.mjs   # segurança e qualidade (estático)
+node tools/test.mjs    # comportamento do content.js
+npm run ci             # os dois, se preferir o atalho
+```
+
+**`tools/check.mjs`** transforma os requisitos de segurança do projeto em algo
+executável, para que uma regressão quebre o CI em vez de passar despercebida.
+Ele confere: permissões (allowlist de uma única entrada, `storage`), ausência das
+chaves de manifest que ampliariam o alcance (`host_permissions`, `background`,
+`web_accessible_resources`…), `matches` exatamente igual a `https://www.youtube.com/*`,
+padrões proibidos no código (`eval`, `new Function`, `innerHTML`, `document.write`,
+`fetch`/XHR/WebSocket, storage da página, `document.cookie`…), uso de `chrome.*`
+restrito a `storage` e `runtime`, ausência de URLs remotas, CSP do popup (nenhum
+script/estilo/handler inline), `DEBUG` desligado, sintaxe (`node --check`),
+integridade dos PNGs e ausência de dependências ou passo de build.
+
+**`tools/test.mjs`** executa o `content.js` real dentro de um `vm` com um DOM
+falso mínimo (sem jsdom), cobrindo: padrão desligado, instalação e **remoção**
+de listeners/observers ao ligar e desligar, guarda de `/shorts/`, detecção de fim
+por limiar e por reinício do loop, `seek` manual não confundido com fim, vídeo
+pausado, `duration` inválida, trava de avanço único e a cadeia de fallbacks
+(botão → scroll → `ArrowDown`), inclusive o caminho de tela cheia.
+
+A suíte foi validada por teste de mutação: quebrando o `content.js` de propósito
+(removendo a trava de avanço único, a guarda de pausa, a de `/shorts/`, a remoção
+de listeners no desligar) e o manifest (adicionando `tabs`, ampliando `matches`),
+cada quebra é reprovada pelo gate correspondente.
+
+## CI
+
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) roda em `push` na `main`,
+em pull request e sob demanda. **Não há deploy nem publicação** — o pipeline só
+audita e testa:
+
+- job `quality`: `node tools/check.mjs` + `node tools/test.mjs` no Node 20.
+- job `manifest-diff` (só em PR): imprime o diff do `manifest.json` e emite um
+  aviso quando ele muda, porque alteração de permissão é a mudança mais sensível
+  do projeto e a que mais merece um segundo par de olhos.
+
+O token do workflow é `contents: read` e o checkout usa `persist-credentials: false`.
 
 ## Como usar
 
