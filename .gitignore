@@ -1,0 +1,120 @@
+# ---------------------------------------------------------------------------
+# Segredos e credenciais
+# A categoria que mais dói se escapar: o git guarda para sempre, e num repo
+# publico o vazamento e instantaneo. Primeiro por ser a mais importante.
+# ---------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.ppk
+*.p12
+*.pfx
+*.keystore
+secrets.json
+credentials.json
+.netrc
+.npmrc
+
+# ---------------------------------------------------------------------------
+# Empacotamento da extensao
+# O "Pack extension" do Chrome/Opera gera um .crx e um .pem. Esse .pem e a
+# CHAVE PRIVADA que assina a extensao e define o ID dela: quem tiver o arquivo
+# publica atualizacoes no seu lugar. Ja coberto por *.pem acima, mas fica o
+# registro do porque.
+# ---------------------------------------------------------------------------
+*.crx
+*.zip
+*.tar
+*.tar.gz
+*.xpi
+web-ext-artifacts/
+
+# ---------------------------------------------------------------------------
+# Node / npm
+# O projeto nao tem dependencias hoje; isto e rede de protecao para o dia em
+# que voce experimentar alguma ferramenta e nao quiser commita-la sem querer.
+#
+# package-lock.json NAO entra aqui de proposito: lockfile se commita. Se um dia
+# aparecer dependencia, quem deve gritar e o tools/check.mjs, nao o .gitignore.
+# ---------------------------------------------------------------------------
+node_modules/
+jspm_packages/
+.npm/
+.yarn/
+.pnp.*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+.node_repl_history
+*.tsbuildinfo
+
+# ---------------------------------------------------------------------------
+# Build, cache e cobertura
+# Nada disso existe no projeto (nao ha passo de build), mas se um dia existir,
+# artefato gerado nao se versiona.
+# ---------------------------------------------------------------------------
+dist/
+build/
+out/
+coverage/
+.nyc_output/
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+
+# ---------------------------------------------------------------------------
+# Editores e IDEs
+# ---------------------------------------------------------------------------
+.vscode/
+# Se um dia quiser versionar parte da config do editor, abra excecoes assim:
+# !.vscode/extensions.json
+# !.vscode/settings.json
+.idea/
+*.code-workspace
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
+
+# ---------------------------------------------------------------------------
+# Ferramentas locais
+# ---------------------------------------------------------------------------
+.claude/settings.local.json
+
+# ---------------------------------------------------------------------------
+# Sistema operacional
+# ---------------------------------------------------------------------------
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+# macOS
+.DS_Store
+.AppleDouble
+._*
+.Spotlight-V100
+.Trashes
+# Linux
+.directory
+.Trash-*
+.fuse_hidden*
+
+# ---------------------------------------------------------------------------
+# Temporarios e rascunhos
+# ---------------------------------------------------------------------------
+tmp/
+temp/
+*.tmp
+*.bak
+*.orig
+*.rej
+*.log
