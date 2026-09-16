@@ -55,11 +55,18 @@ jobs:
 
       # Mudanca de permissao e a alteracao mais sensivel do projeto; deixar
       # explicita no log do PR evita que passe batida numa revisao rapida.
+      #
+      # O nome do branch chega por variavel de ambiente, nunca interpolado com
+      # ${{ }} dentro do script: interpolacao acontece ANTES do shell existir, e
+      # um nome de branch pode conter $( ) ou crase. Como env var, o valor e
+      # tratado como dado pelo shell, nao como codigo.
       - name: Diff do manifest.json
+        env:
+          BASE_REF: ${{ github.base_ref }}
         run: |
-          if git diff --quiet "origin/${{ github.base_ref }}...HEAD" -- manifest.json; then
+          if git diff --quiet "origin/$BASE_REF...HEAD" -- manifest.json; then
             echo "manifest.json nao mudou neste PR."
           else
             echo "::warning title=manifest.json alterado::Revise permissoes e matches antes de aprovar."
-            git diff "origin/${{ github.base_ref }}...HEAD" -- manifest.json
+            git diff "origin/$BASE_REF...HEAD" -- manifest.json
           fi
