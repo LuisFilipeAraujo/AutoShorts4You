@@ -1,0 +1,15 @@
+{
+  "name": "autoshorts4you",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Extensao MV3 de uso pessoal que avanca automaticamente os YouTube Shorts.",
+  "license": "UNLICENSED",
+  "scripts": {
+    "check": "node tools/check.mjs",
+    "test": "node tools/test.mjs",
+    "ci": "npm run check && npm test"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

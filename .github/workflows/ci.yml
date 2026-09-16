@@ -1,0 +1,65 @@
+name: CI
+
+# Sem deploy e sem publicacao: o pipeline so audita e testa o codigo.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Token somente-leitura: nada aqui escreve no repositorio.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Qualidade e seguranca
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # A extensao nao tem dependencias, entao nao ha npm install: se um dia
+      # aparecer um node_modules, o proprio check.mjs falha.
+      - name: Checagens estaticas (seguranca + qualidade)
+        run: node tools/check.mjs
+
+      - name: Testes de comportamento
+        run: node tools/test.mjs
+
+  manifest-diff:
+    name: Alerta de mudanca em permissoes
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      # Mudanca de permissao e a alteracao mais sensivel do projeto; deixar
+      # explicita no log do PR evita que passe batida numa revisao rapida.
+      - name: Diff do manifest.json
+        run: |
+          if git diff --quiet "origin/${{ github.base_ref }}...HEAD" -- manifest.json; then
+            echo "manifest.json nao mudou neste PR."
+          else
+            echo "::warning title=manifest.json alterado::Revise permissoes e matches antes de aprovar."
+            git diff "origin/${{ github.base_ref }}...HEAD" -- manifest.json
+          fi
